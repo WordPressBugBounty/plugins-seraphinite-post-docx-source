@@ -4,9 +4,9 @@ Donate link: https://www.s-sols.com/products/wordpress/post-docx-source#offer
 Tags: importer,docx,msword,converter,batch,all in one seo,search engine optimization,wordpress paste from word
 Requires PHP: 5.4
 Requires at least: 4.5
-Stable tag: 2.16.10
-Version: 2.16.10
-Tested up to: 6.6
+Stable tag: 2.16.11
+Version: 2.16.11
+Tested up to: 6.7
 License: GPLv2 or later (if another license is not provided)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Privacy policy: https://www.s-sols.com/privacy-policy
@@ -105,6 +105,18 @@ Save your time by automatically converting from .DOCX to content with all WordPr
 Please, look at the [frequently asked questions](https://www.s-sols.com/docs/wordpress/post-docx-source/faq) to get understanding case by case.
 
 == Changelog ==
+
+= 2.16.11 =
+
+Improvements:
+
+* Deleting old backed up settings.
+* Security while using 'echo'.
+
+Fixes:
+
+* Localization in admin is not loaded under WordPress 6.7 and higher.
+* No 'Enable auto-updates' in plugins list if the plugin is up-to-date.
 
 = 2.16.10 =
 

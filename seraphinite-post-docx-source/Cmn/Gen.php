@@ -665,6 +665,8 @@ class Gen
 
 	static function MakeDir( $path, $recursive = false, $mode = 0777 )
 	{
+		if( @file_exists( $path ) )
+		    return( Gen::S_OK );
 		if( @mkdir( $path, $mode, $recursive ) )
 			return( Gen::S_OK );
 		return( @is_dir( $path ) ? Gen::S_FALSE : Gen::E_FAIL );
@@ -792,9 +794,11 @@ class Gen
 
 	static private function _FileOpen( $filename, $mode, $use_include_path = false )
 	{
-		$nErrRepprev = @error_reporting( E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR );
+		if( strpos( $mode, 'r' ) !== false && !@file_exists( $filename ) )
+		    return( false );
+
 		$h = @fopen( $filename, $mode, $use_include_path );
-		@error_reporting( $nErrRepprev );
+
 		return( $h );
 	}
 
@@ -941,6 +945,11 @@ class Gen
 
 		@fclose( $h );
 		return( Gen::S_OK );
+	}
+
+	static function FileSize( $file )
+	{
+		return( @file_exists( $file ) ? @filesize( $file ) : false );
 	}
 
 	static function SetLastSlash( $filepath, $set = true, $slash = '/' )
@@ -1353,7 +1362,7 @@ class Gen
 				@file_put_contents( $fileHtaccess, 'Options -Indexes' );
 		}
 
-		if( @filesize( $file ) > ( 2 * 1024 * 1024 ) )
+		if( Gen::FileSize( $file ) > ( 2 * 1024 * 1024 ) )
 		{
 			$filePrev = Gen::GetFileName( $file, true, true ) . '.' . sprintf( '%08X', time() ) . '.' . Gen::GetFileExt( $file );
 			if( !@file_exists( $filePrev ) )
@@ -1771,6 +1780,13 @@ class Gen
 		}
 		else if( function_exists( 'gc_disable' ) )
 			gc_disable();
+	}
+
+	static function SetTimeLimit( $seconds )
+	{
+		if( !function_exists( 'set_time_limit' ) )
+			return( false );
+		return( @set_time_limit( $seconds ) );
 	}
 
 	static private $_lastErrDsc = null;
@@ -4529,6 +4545,55 @@ class WpFakePostContainer
 
 class Wp
 {
+	static function GetKsesSanitizeCtx( $context = '' )
+	{
+		if( is_array( $context ) )
+			return( $context );
+
+		static $g_aScope = array();
+
+		if( !isset( $g_aScope[ $context ] ) )
+		{
+			switch( $context )
+			{
+			case 'admin':
+				$g_aScope[ $context ] = array_replace_recursive( wp_kses_allowed_html( 'post' ),
+					array(
+						'input' => array(
+							'type' => true,
+							'value' => true,
+							'onclick' => true,
+							'class' => true,
+							'style' => true,
+						),
+
+						'div' => array(
+						    'class' => true,
+						    'style' => true,
+						    'id' => true,
+							'data-*' => true,
+						),
+					)
+				);
+
+				add_filter( 'safe_style_css', function( $aRule ) { return( array_merge( $aRule, array( 'display' ) ) ); }, 10 );
+				break;
+
+			case 'script':
+				$g_aScope[ $context ] = array_replace_recursive( array(),
+					array(
+						'script' => array(
+							'type' => true,
+						),
+					)
+				);
+				break;
+			}
+		}
+
+		return( (isset($g_aScope[ $context ])?$g_aScope[ $context ]:null) );
+	}
+
 	static function SanitizeId( $id )
 	{
 		return( Gen::SanitizeId( sanitize_text_field( $id ) ) );
@@ -5292,7 +5357,7 @@ class Wp
 		if( Gen::DoesFuncExist( '\\wp_add_inline_script' ) )
 			return( \wp_add_inline_script( $handle, $data, $position ) );
 
-		echo( Ui::ScriptInlineContent( $data ) );
+		echo( wp_kses( Ui::ScriptInlineContent( $data ), Wp::GetKsesSanitizeCtx( 'script' ) ) );
 		return( true );
 	}
 
@@ -5930,7 +5995,22 @@ class Wp
 	static private function _Loc_LoadTextDomain( $domain, $pathRel )
 	{
 
-		return( load_plugin_textdomain( $domain, false, $pathRel ) );
+		if( !function_exists( 'has_translation' )  )
+			return( load_plugin_textdomain( $domain, false, $pathRel ) );
+
+		$locale = apply_filters( 'plugin_locale', determine_locale(), $domain );
+
+		$mofile = $domain . '-' . $locale . '.mo';
+
+		if ( load_textdomain( $domain, WP_LANG_DIR . '/plugins/' . $mofile ) )
+			return true;
+
+		if( false !== $pathRel )
+			$path = WP_PLUGIN_DIR . '/' . trim( $pathRel, '/' );
+		else
+			$path = WP_PLUGIN_DIR;
+
+		return load_textdomain( $domain, $path . '/' . $mofile );
 
 	}
 
