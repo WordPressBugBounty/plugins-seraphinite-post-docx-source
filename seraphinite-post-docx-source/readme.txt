@@ -4,8 +4,8 @@ Donate link: https://www.s-sols.com/products/wordpress/post-docx-source#offer
 Tags: importer,docx,msword,converter,batch,all in one seo,search engine optimization,wordpress paste from word
 Requires PHP: 5.4
 Requires at least: 4.5
-Stable tag: 2.16.11
-Version: 2.16.11
+Stable tag: 2.16.12
+Version: 2.16.12
 Tested up to: 6.7
 License: GPLv2 or later (if another license is not provided)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -105,6 +105,13 @@ Save your time by automatically converting from .DOCX to content with all WordPr
 Please, look at the [frequently asked questions](https://www.s-sols.com/docs/wordpress/post-docx-source/faq) to get understanding case by case.
 
 == Changelog ==
+
+= 2.16.12 =
+
+Fixes:
+
+* Localization is unavailable when 'Loco Translate' plugin is used.
+* Vulnerable to Sensitive Data Exposure while exporting settings.
 
 = 2.16.11 =
 

@@ -1501,6 +1501,7 @@ class Gen
 
 	static function ExecEscArg( $a )
 	{
+
 		return( function_exists( 'escapeshellarg' ) ? escapeshellarg( $a ) : ( "'" . str_replace( "'", "\\'", $a ) . "'" ) );
 	}
 
@@ -2602,6 +2603,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 			if( $filePrev && $filePrev != $file && !@rename( $filePrev, $file ) )
 			{
 				Gen::LastErrDsc_Set( LocId::Pack( 'FileRenameErr_%1$s%2$s', 'Common', array( $filePrev, $file ) ) );
+
 				return( false );
 			}
 
@@ -2620,6 +2622,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 					if( Gen::FilePutContentWithMakeDir( $fileTmp, ( string )$data ) != Gen::S_OK )
 					{
 						Gen::LastErrDsc_Set( LocId::Pack( 'FileWriteErr_%1$s', 'Common', array( $fileTmp ) ) );
+
 						return( false );
 					}
 
@@ -2629,6 +2632,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 				if( !@rename( $fileTmp, $file ) )
 				{
 					Gen::LastErrDsc_Set( LocId::Pack( 'FileRenameErr_%1$s%2$s', 'Common', array( $fileTmp, $file ) ) );
+
 					return( false );
 				}
 			}
@@ -2638,6 +2642,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 			if( $filePrev && !@unlink( $filePrev ) && file_exists( $filePrev ) )
 			{
 				Gen::LastErrDsc_Set( LocId::Pack( 'FileDeleteErr_%1$s', 'Common', array( $filePrev ) ) );
+
 				return( false );
 			}
 
@@ -6023,7 +6028,10 @@ class Wp
 		if( !count( $subSystemIds ) )
 			return( false );
 
-		$aFlt = array(); Wp::RemoveFilters( 'override_load_textdomain', array( 'Performant_Translations', Wp::REMOVEFILTER_FUNCNAME_ALL ), Wp::REMOVEFILTER_PRIORITY_ALL, $aFlt );
+		$aFlt = array();
+		Wp::RemoveFilters( 'override_load_textdomain', array( 'Performant_Translations', Wp::REMOVEFILTER_FUNCNAME_ALL ), Wp::REMOVEFILTER_PRIORITY_ALL, $aFlt );
+		Wp::RemoveFilters( Wp::REMOVEFILTER_TAG_ALL, array( 'Loco_hooks_LoadHelper', Wp::REMOVEFILTER_FUNCNAME_ALL ), Wp::REMOVEFILTER_PRIORITY_ALL, $aFlt );
+		Wp::RemoveFilters( Wp::REMOVEFILTER_TAG_ALL, array( 'Loco_hooks_LegacyLoadHelper', Wp::REMOVEFILTER_FUNCNAME_ALL ), Wp::REMOVEFILTER_PRIORITY_ALL, $aFlt );
 
 		$pathAbsRoot = WP_PLUGIN_DIR . '/' . $domainLocDir;
 		$pathRel = $domainLocDir . '/' . $locSubPath;

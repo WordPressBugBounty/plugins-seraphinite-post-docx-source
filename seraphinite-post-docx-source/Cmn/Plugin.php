@@ -291,7 +291,7 @@ class PluginRmtCfg
 			$args[ 'epid' ] = Wp::GetSiteId();
 			$args[ 'id' ] = 'wordpress-post-docx-source';
 			$args[ 'name' ] = 'Post%20.DOCX%20Source';
-			$args[ 'v' ] = '2.16.11';
+			$args[ 'v' ] = '2.16.12';
 			$args[ 'pk' ] = 'Base';
 			$args[ 'cfg' ] = '';
 			$args[ 'loc' ] = Wp::GetLocale();
@@ -313,11 +313,11 @@ class PluginRmtCfg
 		if( $lastCheckPackage === null && $lastCheckVer !== null )
 			$lastCheckPackage = 'Base';
 
-		if( $lastCheckVer !== '2.16.11' || $lastCheckPackage !== 'Base' )
+		if( $lastCheckVer !== '2.16.12' || $lastCheckPackage !== 'Base' )
 		{
 			$state = Plugin::StateGet();
 
-			if( $lastCheckVer !== '2.16.11' && !isset( $state[ 'changeVerCheck' ] ) )
+			if( $lastCheckVer !== '2.16.12' && !isset( $state[ 'changeVerCheck' ] ) )
 			{
 				$state[ 'changeVerCheck' ] = $lastCheckVer !== null ? $lastCheckVer : '';
 				Plugin::StateSet( $state );
@@ -334,7 +334,7 @@ class PluginRmtCfg
 
 		if( !$bForce )
 		{
-			if( $bFirstTimeOnly && $lastCheckVer == '2.16.11' )
+			if( $bFirstTimeOnly && $lastCheckVer == '2.16.12' )
 				return( Gen::S_FALSE );
 
 			$lastUpdTime = (isset($data[ 'updTime' ])?$data[ 'updTime' ]:null);
@@ -353,7 +353,7 @@ class PluginRmtCfg
 			$args[ 'epid' ] = Wp::GetSiteId();
 			$args[ 'id' ] = 'wordpress-post-docx-source';
 			$args[ 'name' ] = 'Post%20.DOCX%20Source';
-			$args[ 'v' ] = '2.16.11';
+			$args[ 'v' ] = '2.16.12';
 			$args[ 'pk' ] = 'Base';
 			$args[ 'cfg' ] = '';
 			$args[ 'loc' ] = Wp::GetLocale();
@@ -370,7 +370,7 @@ class PluginRmtCfg
 			if( $data[ 'mdfTime' ] >= $timeMdf )
 			{
 				$data[ 'updTime' ] = $curUpdTime;
-				$data[ 'plgVer' ] = '2.16.11';
+				$data[ 'plgVer' ] = '2.16.12';
 				$data[ 'plgPk' ] = 'Base';
 
 				$hr = PluginOptions::Set( self::STG_VER, self::STG_ID, $data, __CLASS__ . '::' );
@@ -387,7 +387,7 @@ class PluginRmtCfg
 
 		$data[ 'mdfTime' ] = $timeMdf;
 		$data[ 'updTime' ] = $curUpdTime;
-		$data[ 'plgVer' ] = '2.16.11';
+		$data[ 'plgVer' ] = '2.16.12';
 		$data[ 'plgPk' ] = 'Base';
 
 		if( $timeMdf )
@@ -924,10 +924,10 @@ class Plugin
 		$rmtCfg = PluginRmtCfg::Get();
 
 		$urlProductInfo = Plugin::RmtCfgFld_GetLoc( $rmtCfg, 'Links.UrlProductInfo' );
-		$urlAboutPluginImg = file_exists( __DIR__ . '/../Images/ProductLogo.png' ) ? add_query_arg( array( 'v' => '2.16.11' ), Plugin::FileUri( '../Images/ProductLogo.png', __FILE__ ) ) : null;
+		$urlAboutPluginImg = file_exists( __DIR__ . '/../Images/ProductLogo.png' ) ? add_query_arg( array( 'v' => '2.16.12' ), Plugin::FileUri( '../Images/ProductLogo.png', __FILE__ ) ) : null;
 		$urlAboutPluginDocs = Plugin::RmtCfgFld_GetLoc( $rmtCfg, 'Links.UrlProductDocs' );
 		$urlAboutPluginSupport = Plugin::RmtCfgFld_GetLoc( $rmtCfg, 'Links.UrlProductSupport' );
-		$url3rdPartySoft = file_exists( __DIR__ . '/../third-party-software.html' ) ? add_query_arg( array( 'v' => '2.16.11' ), Plugin::FileUri( '../third-party-software.html', __FILE__ ) ) : null;
+		$url3rdPartySoft = file_exists( __DIR__ . '/../third-party-software.html' ) ? add_query_arg( array( 'v' => '2.16.12' ), Plugin::FileUri( '../third-party-software.html', __FILE__ ) ) : null;
 
 		$urlEula = null;
 
@@ -936,7 +936,7 @@ class Plugin
 		$res .= Ui::Tag( 'p' );
 
 		{
-			$version = esc_html( '2.16.11' );
+			$version = esc_html( '2.16.12' );
 
 			$res .= Ui::TagOpen( 'div' );
 
@@ -985,7 +985,7 @@ class Plugin
 	{
 		$rmtCfg = PluginRmtCfg::Get();
 
-		$urlAboutUsLogoImg = file_exists( __DIR__ . '/../Images/VendorLogo.png' ) ? add_query_arg( array( 'v' => '2.16.11' ), Plugin::FileUri( '../Images/VendorLogo.png', __FILE__ ) ) : null;
+		$urlAboutUsLogoImg = file_exists( __DIR__ . '/../Images/VendorLogo.png' ) ? add_query_arg( array( 'v' => '2.16.12' ), Plugin::FileUri( '../Images/VendorLogo.png', __FILE__ ) ) : null;
 		$urlMorePlugins = Plugin::RmtCfgFld_GetLoc( $rmtCfg, 'Links.UrlMorePlugins' );
 		$urlMoreInfo = Plugin::RmtCfgFld_GetLoc( $rmtCfg, 'Links.UrlMain' );
 
@@ -1099,7 +1099,7 @@ class Plugin
 		$res .=
 			Ui::Button( esc_html( Wp::GetLocString( 'Restore' ) ), false, null, null, 'button', array( 'class' => 'ctlSpaceAfter ctlSpaceVAfter', 'style' => array( 'min-width' => '7em' ), 'onclick' => 'if(confirm("' . esc_html_x( 'RestoreConfirm', 'admin.Common_Settings', 'seraphinite-post-docx-source' ) . '"))window.location.href="' . add_query_arg( array( 'seraph_pds_settingsOp' => 'reset', '_' => time() , '_wpnonce' => wp_create_nonce( 'reset' ) ), $_SERVER[ 'REQUEST_URI' ] ) . '"' ) ) .
 			Ui::Button( esc_html( Wp::GetLocString( 'Import' ) ), false, null, null, 'button', array( 'class' => 'ctlSpaceAfter ctlSpaceVAfter', 'style' => array( 'min-width' => '7em' ), 'onclick' => 'jQuery("#seraph_pds_settings_import_file").trigger("click")' ) ) .
-			Ui::Button( esc_html( Wp::GetLocString( 'Export' ) ), false, null, null, 'button', array( 'class' => 'ctlSpaceAfter ctlSpaceVAfter', 'style' => array( 'min-width' => '7em' ), 'onclick' => 'seraph_pds.PluginAdmin.SettExport(this,"' . $urlAct . '")' ) ) .
+			Ui::Button( esc_html( Wp::GetLocString( 'Export' ) ), false, null, null, 'button', array( 'class' => 'ctlSpaceAfter ctlSpaceVAfter', 'style' => array( 'min-width' => '7em' ), 'onclick' => 'seraph_pds.PluginAdmin.SettExport(this,"' . $urlAct . '","' . wp_create_nonce( 'export' ) . '")' ) ) .
 			Ui::Spinner( false, array( 'class' => 'ctlSpaceAfter', 'style' => array( 'display' => 'none' ) ) ) .
 			Ui::InputBox( 'file', 'seraph_pds_settings_import_file', null, array( 'style' => array( 'display' => 'none' ), 'accept' => '.json', 'onchange' => 'seraph_pds.PluginAdmin.SettImport(this,"' . $urlAct . '",this.files.length?this.files[0]:null,"' . wp_create_nonce( 'import' ) . '")' ) ) .
 			Ui::InputBox( 'hidden', '_wpnonce', wp_create_nonce( 'save' ), null, true ) .
@@ -1508,7 +1508,7 @@ class Plugin
 				return( null );
 
 			$verFrom = self::_PrevVer_GetInt( $plgVerPrev );
-			$verTo = self::_PrevVer_GetInt( '2.16.11' );
+			$verTo = self::_PrevVer_GetInt( '2.16.12' );
 			if( $verTo < $verFrom )
 				list( $verTo, $verFrom ) = array( $verFrom, $verTo );
 
@@ -1633,7 +1633,7 @@ class Plugin
 			if( (isset(self::$g_aAlreadyIncludedObj[ 'css' ][ $id ])?self::$g_aAlreadyIncludedObj[ 'css' ][ $id ]:null) )
 				continue;
 
-			wp_enqueue_style( Plugin::CmnScriptId( $id ), add_query_arg( Plugin::GetFileUrlPackageParams(), $fileUrl . '/' . $id . '.css' ), array(), '2.16.11' );
+			wp_enqueue_style( Plugin::CmnScriptId( $id ), add_query_arg( Plugin::GetFileUrlPackageParams(), $fileUrl . '/' . $id . '.css' ), array(), '2.16.12' );
 
 			self::$g_aAlreadyIncludedObj[ 'css' ][ $id ] = true;
 		}
@@ -1700,13 +1700,13 @@ class Plugin
 
 			$scrHndId = Plugin::CmnScriptId( $id );
 
-			wp_register_script( $scrHndId, add_query_arg( Plugin::GetFileUrlPackageParams(), $fileUrl . '/' . $id . '.js' ), $deps, '2.16.11' );
+			wp_register_script( $scrHndId, add_query_arg( Plugin::GetFileUrlPackageParams(), $fileUrl . '/' . $id . '.js' ), $deps, '2.16.12' );
 			if( $id == 'Gen' )
 				Plugin::Loc_ScriptLoad( $scrHndId );
 			wp_enqueue_script( $scrHndId );
 
 			if( $id == 'Gen' )
-				Wp::AddInlineScript( $scrHndId, 'seraph_pds.Plugin._int.urlRoot="' . wp_slash( Plugin::FileUri( '', __DIR__ ) ) . '";seraph_pds.Plugin._int.urlAdminApi="' . wp_slash( Plugin::GetAdminApiUri() ) . '";seraph_pds.Wp.Loc._int.lang="' . Lang::GetLangFromLocale( Wp::GetLocale() ) . '";' );
+				Wp::AddInlineScript( $scrHndId, 'seraph_pds.Plugin._int.urlRoot="' . wp_slash( Plugin::FileUri( '', __DIR__ ) ) . '";seraph_pds.Plugin._int.urlAdminApi="' . wp_slash( Plugin::GetAdminApiUri() ) . '";seraph_pds.Plugin._int.urlApi="' . wp_slash( Plugin::GetApiUri() ) . '";seraph_pds.Wp.Loc._int.lang="' . Lang::GetLangFromLocale( Wp::GetLocale() ) . '";' );
 
 			self::$g_aAlreadyIncludedObj[ 'js' ][ $id ] = true;
 		}
@@ -1852,6 +1852,11 @@ class Plugin
 			break;
 
 		case 'settExport':
+			if( !current_user_can( 'manage_options' ) )
+				wp_die( '', 403 );
+			else if( !wp_verify_nonce( (isset($_REQUEST[ '_wpnonce' ])?$_REQUEST[ '_wpnonce' ]:''), 'export' ) )
+				wp_die( '', 403 );
+
 			self::_Sett_Export();
 			break;
 
@@ -2140,7 +2145,7 @@ class Plugin
 
 							var sendDataUrl = "<?php echo( Gen::GetArrField( $rmtCfg, 'Questionnaires.SendAnswerUrlTpl' ) ); ?>";
 							sendDataUrl = sendDataUrl.replace( "{EndPointId}",					encodeURI( "<?php echo( Wp::GetSiteId() ); ?>" ) );
-							sendDataUrl = sendDataUrl.replace( "{PluginVersion}",				encodeURI( "2.16.11" ) );
+							sendDataUrl = sendDataUrl.replace( "{PluginVersion}",				encodeURI( "2.16.12" ) );
 							sendDataUrl = sendDataUrl.replace( "{PluginMode}",					encodeURI( "base" ) );
 							sendDataUrl = sendDataUrl.replace( "{PluginPackage}",				encodeURI( "Base" ) );
 							sendDataUrl = sendDataUrl.replace( "{QuestionnaireId}",				encodeURI( "<?php echo( (isset($q[ 'id' ])?$q[ 'id' ]:null) ); ?>" ) );
