@@ -1247,10 +1247,23 @@ function _ShowOperateOptionsBlockForPostType( $mode, $postType, $postIsNew, $fil
 				echo( \seraph_pds\Ui::TagOpen( 'tr' ) . \seraph_pds\Ui::TagOpen( 'td' ) );
 				{
 					$fldId = 'docTypes/' . $postType . '/mediaFileNameToSlug';
+					$fldSubId = 'docTypes/' . $postType . '/mediaFileNameToSlug_Mode';
 
 					echo( \seraph_pds\Ui::CheckBox(
-						esc_html_x( 'CnvFileNameToSlugChk', 'admin.Settings_ContentConversion_Media', 'seraphinite-post-docx-source' ) . \seraph_pds\Ui::AdminHelpBtn( Plugin::RmtCfgFld_GetLocEx( $rmtCfgFldCtx, $rmtCfg, 'Help.MediaCnvFileNameToSlug' ), \seraph_pds\Ui::AdminHelpBtnModeChkRad ),
-						'seraph_pds/' . $fldId,
+						array(
+							esc_html_x( 'CnvFileNameToSlugChk_%1$s', 'admin.Settings_ContentConversion_Media', 'seraphinite-post-docx-source' ) . \seraph_pds\Ui::AdminHelpBtn( Plugin::RmtCfgFld_GetLocEx( $rmtCfgFldCtx, $rmtCfg, 'Help.MediaCnvFileNameToSlug' ), \seraph_pds\Ui::AdminHelpBtnModeChkRad ),
+							array(
+								array(
+									'seraph_pds/' . $fldSubId,
+									array(
+										array( '',				esc_html_x( 'CnvFileNameToSlugChk_1_None',				'admin.Settings_ContentConversion_Media', 'seraphinite-post-docx-source' ) ),
+										array( 'Alt',			esc_html_x( 'CnvFileNameToSlugChk_1_Alt',				'admin.Settings_ContentConversion_Media', 'seraphinite-post-docx-source' ) ),
+									),
+									\seraph_pds\Gen::GetArrField( $sett, $fldSubId, '', '/' )
+								)
+							)
+						)
+						, 'seraph_pds/' . $fldId,
 						\seraph_pds\Gen::GetArrField( $sett, $fldId, false, '/' ),
 						$mode == ShowOperateOptionsMode_Settings, array( 'disabled' => $isLimitedModeInSettings )
 					) );
