@@ -107,11 +107,16 @@ class Gen
 		return( Gen::HrSuccFromFail( $hr ) );
 	}
 
-	static function GetArrField( $arr, $fieldPath, $defVal = null, $sep = '.', $bCaseIns = false, $bSafe = true )
+	static function NormArrFieldKey( $key )
+	{
+		return( is_scalar( $key ) ? $key : null );
+	}
+
+	static function GetArrField( $arr, $fieldPath, $defVal = null, $sep = '.', $bCaseIns = false, $bSafe = true, &$bFound = null )
 	{
 		if( !is_array( $fieldPath ) )
 			$fieldPath = explode( $sep, $fieldPath );
-		return( self::_GetArrField( $arr, $fieldPath, $defVal, $bCaseIns, $bSafe ) );
+		return( self::_GetArrField( $arr, $fieldPath, $defVal, $bCaseIns, $bSafe, $bFound ) );
 	}
 
 	static private function _GetVarType( $v )
@@ -122,11 +127,12 @@ class Gen
 		return( $t );
 	}
 
-	static private function _GetArrField( $v, array $fieldPath, $defVal = null, $bCaseIns = false, $bSafe = true )
+	static private function _GetArrField( $v, array $fieldPath, $defVal = null, $bCaseIns = false, $bSafe = true, &$bFound = null )
 	{
 		if( !count( $fieldPath ) )
 			return( $defVal );
 
+		$bFoundLastKey = false;
 		foreach( $fieldPath as $fld )
 		{
 			$isArr = is_array( $v ) ? true : ( is_object( $v ) ? false : null );
@@ -136,24 +142,31 @@ class Gen
 			if( $fld === '' )
 				continue;
 
-			$vNext = $isArr ? ( isset( $v[ $fld ] ) ? $v[ $fld ] : null ) : ( isset( $v -> { $fld } ) ? $v -> { $fld } : null );
-			if( $vNext === null && !( $isArr ? isset( $v[ $fld ] ) : isset( $v -> { $fld } ) ) )
+			$vNext = $isArr ? (isset($v[ $fld ])?$v[ $fld ]:null) : (isset($v -> { $fld })?$v -> { $fld }:null);
+			if( $vNext === null && !( $isArr ? array_key_exists( $fld, $v ) : property_exists( $v, $fld ) ) )
 			{
 				if( !$bCaseIns )
 					return( $defVal );
 
 				$fld = strtolower( $fld );
 
-				$vNext = $isArr ? ( isset( $v[ $fld ] ) ? $v[ $fld ] : null ) : ( isset( $v -> { $fld } ) ? $v -> { $fld } : null );
-				if( $vNext === null && !( $isArr ? isset( $v[ $fld ] ) : isset( $v -> { $fld } ) ) )
+				$vNext = $isArr ? (isset($v[ $fld ])?$v[ $fld ]:null) : (isset($v -> { $fld })?$v -> { $fld }:null);
+				if( $vNext === null && !( $isArr ? array_key_exists( $fld, $v ) : property_exists( $v, $fld ) ) )
 					return( $defVal );
+
+				$bFoundLastKey = true;
 			}
+			else
+				$bFoundLastKey = true;
 
 			$v = $vNext;
 		}
 
 		if( $bSafe && $defVal !== null && self::_GetVarType( $v ) != self::_GetVarType( $defVal ) )
 			return( $defVal );
+
+		if( $bFoundLastKey )
+			$bFound = true;
 		return( $v );
 	}
 
@@ -208,7 +221,7 @@ class Gen
 			return( true );
 		}
 
-		$vNext = $isObj ? ( isset( $arr -> { $fld } ) ? $arr -> { $fld } : null ) : ( isset( $arr[ $fld ] ) ? $arr[ $fld ] : null );
+		$vNext = $isObj ? (isset($arr -> { $fld })?$arr -> { $fld }:null) : (isset($arr[ $fld ])?$arr[ $fld ]:null);
 		if( !is_array( $vNext ) && !is_object( $vNext ) )
 		{
 			if( $isObj )
@@ -283,15 +296,14 @@ class Gen
 		return( @serialize( $v ) );
 	}
 
-	static function Unserialize( $data, $defVal = null )
+	static function Unserialize( $data, $defVal = null, &$bOk = null )
 	{
-		if( !is_serialized( $data ) )
-			return( $defVal );
 
 		$v = @unserialize( $data );
-		if( $v === false )
+		if( $v === false && $data !== @serialize( false ) )
 			return( $defVal );
 
+		$bOk = true;
 		return( $v );
 	}
 
@@ -583,7 +595,7 @@ class Gen
 	{
 		if( !$withPath )
 		{
-			$filepath = basename( $filepath );
+			$filepath = Gen::StrEndsWith( $filepath, array( '/', '\\' ) ) ? '' : basename( $filepath );
 			if( !$nameOnly )
 				return( $filepath );
 		}
@@ -597,7 +609,7 @@ class Gen
 
 	static function GetFileDir( $filepath, $saveLastSep = false, $levels = 1 )
 	{
-		if( !$levels || gettype( $filepath ) !== 'string' )
+		if( !$levels || !is_string( $filepath ) )
 			return( $filepath );
 
 		$sepPos = 0;
@@ -639,6 +651,24 @@ class Gen
 			return( '' );
 
 		return( substr( $filepath, 0, $sepPos + ( $saveLastSep ? 1 : 0 ) ) );
+	}
+
+	static function DoesFileDirExist( $filePath, $filePathRoot = null )
+	{
+		for( ;; )
+		{
+			$filePath = Gen::GetFileDir( $filePath );
+			if( !strlen( $filePath ) )
+				break;
+
+			if( $filePathRoot && strlen( $filePathRoot ) >= strlen( $filePath ) )
+				break;
+
+			if( @file_exists( $filePath ) )
+				return( true );
+		}
+
+		return( false );
 	}
 
 	static function GetNormalizedPath( $path )
@@ -1046,7 +1076,7 @@ class Gen
 		return( false );
 	}
 
-	static function StrEndsWith( string $haystack, string $needle )
+	static function StrEndsWith( string $haystack, $needle )
 	{
 		if( is_string( $needle ) )
 		{
@@ -1171,6 +1201,26 @@ class Gen
 	static function ArrEqual( array $a1, array $a2 )
 	{
 		return( count( $a1 ) == count( $a2 ) && !array_diff( $a1, $a2 ) && !array_diff( $a2, $a1 ) );
+	}
+
+	static function ArrContainRecursive( array $aIn, array $a )
+	{
+		foreach( $a as $k => $v )
+		{
+			if( !isset( $aIn[ $k ] ) )
+				return( false );
+
+			$vIn = $aIn[ $k ];
+			if( is_array( $vIn ) && is_array( $v ) )
+			{
+				if( !Gen::ArrContainRecursive( $vIn, $v ) )
+					return( false );
+			}
+			else if( $v !== $vIn )
+				return( false );
+		}
+
+		return( true );
 	}
 
 	static function ArrAdd( array &$array, array $array2 )
@@ -1732,7 +1782,12 @@ class Gen
 	static function ParseProps( $props, $sep = ';', $sepVal = '=', $aDefs = null )
 	{
 		$a = array();
-		foreach( explode( ( string )$sep, trim( ( string )$props, $sep ) ) as $p )
+
+		$props = trim( ( string )$props, " \n\r\t\v\x00" . $sep );
+		if( !strlen( $props ) )
+			return( $a );
+
+		foreach( explode( ( string )$sep, $props ) as $p )
 		{
 			if( $sepVal === null )
 			{
@@ -1788,6 +1843,20 @@ class Gen
 		if( !function_exists( 'set_time_limit' ) )
 			return( false );
 		return( @set_time_limit( $seconds ) );
+	}
+
+	static function NormVal( $v, array $aPrms )
+	{
+		if( isset( $aPrms[ 'min' ] ) && $v < $aPrms[ 'min' ] )
+			$v = $aPrms[ 'min' ];
+		if( isset( $aPrms[ 'max' ] ) && $v > $aPrms[ 'max' ] )
+			$v = $aPrms[ 'max' ];
+		return( $v );
+	}
+
+	static function FileMTime( $file )
+	{
+		return( @file_exists( $file ) ? @filemtime( $file ) : false );
 	}
 
 	static private $_lastErrDsc = null;
@@ -2532,7 +2601,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 		return( $res );
 	}
 
-	function splice( $offset = null, $length = null )
+	function splice( $offset = null, $length = null, &$resUpd = null )
 	{
 		$res = array();
 		$offset = ( int )$offset;
@@ -2565,7 +2634,7 @@ class ArrayOnFiles implements \Iterator, \ArrayAccess, \Countable
 			$offset = 0;
 		}
 
-		$this -> _ChunksUpdate();
+		$resUpd = $this -> _ChunksUpdate();
 		$this -> _UnloadUnusedChunks();
 		return( $res );
 	}
@@ -3162,7 +3231,7 @@ class Net
 		return( $host );
 	}
 
-	static function GetRequestHeaders( $serverArgs = null, $bAssoc = true, $bNorm = false )
+	static function GetRequestHeaders( $serverArgs = null, $bAssoc = true, $bNorm = false, array $aIncl = array(), array $aExcl = array() )
 	{
 		if( $serverArgs === null )
 			$serverArgs = $_SERVER;
@@ -3171,6 +3240,12 @@ class Net
 		foreach( $serverArgs as $key => $value )
 		{
 			if( strpos( $key, 'HTTP_' ) !== 0 )
+				continue;
+
+			if( $aIncl && !in_array( $key, $aIncl ) )
+				continue;
+
+			if( $aExcl && in_array( $key, $aExcl ) )
 				continue;
 
 			$header = str_replace( ' ', '-', ucwords( str_replace( '_', ' ', strtolower( substr( $key, 5 ) ) ) ) );
@@ -3253,12 +3328,18 @@ class Net
 		return( $args );
 	}
 
-	static function UrlAddArgs( $url, $args )
+	static function UrlAddArgsEx( $url, $args )
 	{
 		$args = Net::UrlBuildQuery( $args );
 		if( $args )
 			$url = $url . '?' . $args;
 		return( $url );
+	}
+
+	static function UrlAddArgs( $url, $args )
+	{
+		$args = array_merge( Net::UrlExtractArgs( $url ), $args );
+		return( Net::UrlAddArgsEx( $url, $args ) );
 	}
 
 	const URLPARSE_F_QUERY					= 1;
@@ -3381,26 +3462,107 @@ class Net
 
 	static function CurRequestRemoveArgs( &$args, array $aArgRemove )
 	{
+		if( !$aArgRemove )
+			return;
+
 		$requestUri = &$_SERVER[ 'REQUEST_URI' ];
 		$requestUriArgs = Net::UrlExtractArgs( $requestUri );
 
 		$redirect_query_string_args = Net::UrlParseQuery( (isset($_SERVER[ 'REDIRECT_QUERY_STRING' ])?$_SERVER[ 'REDIRECT_QUERY_STRING' ]:'') );
 		$query_string_args = Net::UrlParseQuery( (isset($_SERVER[ 'QUERY_STRING' ])?$_SERVER[ 'QUERY_STRING' ]:'') );
 
-		foreach( $aArgRemove as $argRemove )
+		foreach( $aArgRemove as $argIdx => $argRemove )
 		{
+			if( is_string( $argIdx ) )
+			{
+				if( $argRemove !== null )
+				{
+					$args[ $argIdx ] = $argRemove;
+					if( isset( $_GET[ $argIdx ] ) ) $_GET[ $argIdx ] = $argRemove;
+					if( isset( $_POST[ $argIdx ] ) ) $_POST[ $argIdx ] = $argRemove;
+					$_REQUEST[ $argIdx ] = $argRemove;
+					$requestUriArgs[ $argIdx ] = $argRemove;
+					$redirect_query_string_args[ $argIdx ] = $argRemove;
+					$query_string_args[ $argIdx ] = $argRemove;
+					continue;
+				}
+
+				$argRemove = $argIdx;
+			}
+
 			unset( $args[ $argRemove ] );
 			unset( $_GET[ $argRemove ] );
+			unset( $_POST[ $argRemove ] );
 			unset( $_REQUEST[ $argRemove ] );
 			unset( $requestUriArgs[ $argRemove ] );
 			unset( $redirect_query_string_args[ $argRemove ] );
 			unset( $query_string_args[ $argRemove ] );
 		}
 
-		$requestUri = Net::UrlAddArgs( $requestUri, $requestUriArgs );
+		$requestUri = Net::UrlAddArgsEx( $requestUri, $requestUriArgs );
 
 		$_SERVER[ 'REDIRECT_QUERY_STRING' ] = Net::UrlBuildQuery( $redirect_query_string_args );
 		$_SERVER[ 'QUERY_STRING' ] = Net::UrlBuildQuery( $query_string_args );
+	}
+
+	static function RemoteRequest( $method, $url, $args = null )
+	{
+		$requestRes = array( 'method' => $method, 'url' => $url, 'response' => array( 'code' => 0, 'message' => '' ), 'headers' => array(), 'body' => '' );
+
+		if( !isset( $args[ 'provider' ] ) )
+			$args[ 'provider' ] = 'CURL';
+		if( !isset( $args[ 'useragent' ] ) )
+			$args[ 'useragent' ] = 'seraph-pds-Agent/2.16.14';
+		if( !isset( $args[ 'timeout' ] ) )
+			$args[ 'timeout' ] = 5;
+
+		if( $args[ 'provider' ] !== 'CURL' )
+			return( Gen::E_UNSUPPORTED );
+
+		if( !function_exists( 'curl_init' ) || !function_exists( 'curl_exec' ) )
+			return( Gen::E_UNSUPPORTED );
+
+		$hCurl = curl_init( $url );
+		curl_setopt( $hCurl, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $hCurl, CURLOPT_SSL_VERIFYHOST, 2 );
+		curl_setopt( $hCurl, CURLOPT_SSL_VERIFYPEER, false );
+		if( $method === 'POST' )
+			curl_setopt( $hCurl, CURLOPT_POST, true );
+		curl_setopt( $hCurl, CURLOPT_USERAGENT, $args[ 'useragent' ] );
+		if( isset( $args[ 'referer' ] ) )
+			curl_setopt( $hCurl, CURLOPT_REFERER, $args[ 'referer' ] );
+		curl_setopt( $hCurl, CURLOPT_TIMEOUT, $args[ 'timeout' ] );
+		curl_setopt( $hCurl, CURLOPT_MAXREDIRS, 2 );
+		curl_setopt( $hCurl, CURLOPT_FOLLOWLOCATION, true );
+
+		if( $method === 'POST' && isset( $args[ 'data' ] ) )
+		{
+			$requestRes[ 'data_sent' ] = $args[ 'data' ];
+			curl_setopt( $hCurl, CURLOPT_POSTFIELDS, $args[ 'data' ] );
+		}
+
+		{
+			$aHdrPlain = array();
+			if( isset( $args[ 'headers' ] ) )
+			{
+				$requestRes[ 'headers_sent' ] = $args[ 'headers' ];
+				foreach( $args[ 'headers' ] as $name => $value )
+					$aHdrPlain[] = $name . ': ' . $value;
+			}
+
+			curl_setopt( $hCurl, CURLOPT_HTTPHEADER, $aHdrPlain );
+		}
+
+		$requestRes[ 'body' ] = curl_exec( $hCurl );
+		$requestRes[ 'response' ][ 'code' ] = curl_getinfo( $hCurl, CURLINFO_HTTP_CODE );
+		curl_close( $hCurl );
+
+		return( $requestRes );
+	}
+
+	static function GetTimeFromHdrVal( $v )
+	{
+		return( strtotime( preg_replace( '@;.*$@', '', $v ) ) );
 	}
 }
 
@@ -3866,7 +4028,7 @@ class HtmlNd
 				$val[] = $valClass;
 
 		foreach( $valClassesRemove as $valClassRemove )
-			if( ( $i = array_search( $valClassRemove, $val ) ) !== false )
+			while( ( $i = array_search( $valClassRemove, $val ) ) !== false )
 				unset( $val[ $i ] );
 
 		$val = implode( ' ', $val );
@@ -4406,6 +4568,9 @@ class Php
 
 	static function Tokens_GetFromContent( $str, $preserveLineNums = false )
 	{
+		if( !function_exists( 'token_get_all' ) )
+			return( false );
+
 		$tokens = @token_get_all( $str );
 		Php::Tokens_Normalize( $tokens, $preserveLineNums );
 		return( $tokens );
@@ -4492,7 +4657,14 @@ class Php
 		if( !$fileContent )
 			return( Gen::E_ACCESS_DENIED );
 
-		if( !Php::Content_SetDefineVal( $fileContent, $name, $val ) )
+		if( !function_exists( 'token_get_all' ) )
+		{
+			if( !Gen::StrStartsWith( $fileContent, '<?php' ) )
+				return( Gen::S_FALSE );
+
+			$fileContent = "<?php\ndefine( '" . $name . "', " . var_export( $val, true ) . " );\n" . substr( $fileContent, 5 );
+		}
+		else if( !Php::Content_SetDefineVal( $fileContent, $name, $val ) )
 			return( Gen::S_FALSE );
 
 		if( !is_integer( file_put_contents( $file, $fileContent, LOCK_EX ) ) )
@@ -4504,6 +4676,9 @@ class Php
 	static function Content_SetDefineVal( &$fileContent, $name, $val )
 	{
 		$tokens = Php::Tokens_GetFromContent( $fileContent );
+		if( $tokens === false )
+			return( false );
+
 		if( !Php::Tokens_SetDefineVal( $tokens, $name, $val ) )
 			return( false );
 
@@ -4880,7 +5055,7 @@ class Wp
 		return( @tempnam( $dirTmp, substr( 'pds', 0, 3 ) ) );
 	}
 
-	static private function _RemoteGet_Ctx( &$url, &$args )
+	static private function _RemoteGet_Ctx( &$url, &$args, $method )
 	{
 		if( $args === null )
 			$args = array();
@@ -4899,6 +5074,7 @@ class Wp
 		}
 
 		$obj = new AnyObj();
+		$obj -> method = $method;
 
 		$obj -> _cbRequestBefore =
 			function( $obj, $url, $p1, $p2, $p3, &$options )
@@ -4910,7 +5086,8 @@ class Wp
 		$obj -> _cbRequestsBeforeParse =
 			function( $obj, &$response, $url, $headers, $data, $type, $options )
 			{
-				$obj -> method = $type;
+				if( $type )
+					$obj -> method = $type;
 
 				$obj -> headers_sent = ( array )$headers;
 				if( isset( $options[ 'useragent' ] ) )
@@ -4941,6 +5118,8 @@ class Wp
 				if( is_wp_error( $res ) )
 				{
 					$res -> add_data( $url, 'url' );
+					if( isset( $obj -> method ) )
+						$res -> add_data( $obj -> method, 'method' );
 					return( $res );
 				}
 
@@ -4958,7 +5137,10 @@ class Wp
 
 	static function RemoteGet( $url, $args = null )
 	{
-		$obj = self::_RemoteGet_Ctx( $url, $args );
+		if( !function_exists( 'wp_remote_get' ) )
+			return( null );
+
+		$obj = self::_RemoteGet_Ctx( $url, $args, 'GET' );
 
 		$obj -> setHooks( true );
 		$res = wp_remote_get( $url, $args );
@@ -4969,7 +5151,10 @@ class Wp
 
 	static function RemotePost( $url, $args = null )
 	{
-		$obj = self::_RemoteGet_Ctx( $url, $args );
+		if( !function_exists( 'wp_remote_post' ) )
+			return( null );
+
+		$obj = self::_RemoteGet_Ctx( $url, $args, 'POST' );
 
 		$obj -> setHooks( true );
 		$res = wp_remote_post( $url, $args );
@@ -4985,7 +5170,10 @@ class Wp
 		if( $method === 'POST' )
 			return( Wp::RemotePost( $url, $args ) );
 
-		$obj = self::_RemoteGet_Ctx( $url, $args );
+		if( !function_exists( 'wp_remote_request' ) )
+			return( null );
+
+		$obj = self::_RemoteGet_Ctx( $url, $args, $method );
 
 		$args[ 'method' ] = $method;
 
@@ -6295,12 +6483,17 @@ class Wp
 
 	static function GetCronUrl( $args = array() )
 	{
-		return( Net::UrlAddArgs( Wp::GetSiteWpRootUrl( 'wp-cron.php' ), $args ) );
+		return( Net::UrlAddArgsEx( Wp::GetSiteWpRootUrl( 'wp-cron.php' ), $args ) );
 	}
 
 	static function IsInRunningCron()
 	{
 		return( defined( 'DOING_CRON' ) && DOING_CRON );
+	}
+
+	static function IsCronEnabled()
+	{
+		return( !( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) );
 	}
 
 	static function GetHomePath()

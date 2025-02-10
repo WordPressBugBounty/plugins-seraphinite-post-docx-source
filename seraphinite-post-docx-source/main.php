@@ -19,8 +19,8 @@ add_action( 'wp_enqueue_scripts',
 		if( $formulasStylesLoadMode != 'No' )
 		{
 			if( $formulasStylesLoadMode == 'Static' )
-				wp_enqueue_style( 'seraph-pds-MathJax-CHtml', Plugin::FileUrl( 'Ext/MathJax/CHtml.css', __FILE__ ), array(), '2.16.13' );
-			wp_enqueue_script( Plugin::ScriptId( 'View' ), add_query_arg( Plugin::GetFileUrlPackageParams(), Plugin::FileUrl( 'View.js', __FILE__ ) ), array(), '2.16.13' );
+				wp_enqueue_style( 'seraph-pds-MathJax-CHtml', Plugin::FileUrl( 'Ext/MathJax/CHtml.css', __FILE__ ), array(), '2.16.14' );
+			wp_enqueue_script( Plugin::ScriptId( 'View' ), add_query_arg( Plugin::GetFileUrlPackageParams(), Plugin::FileUrl( 'View.js', __FILE__ ) ), array(), '2.16.14' );
 		}
 	}
 );
@@ -38,7 +38,7 @@ function _AddMenus( $accepted = false )
 	if( _UserCanUsePlugin( array( 'administrator' ) ) )
 		add_options_page( Plugin::GetSettingsTitle(), Plugin::GetNavMenuTitle(), 'manage_options', 'seraph_pds_settings', $accepted ? 'seraph_pds\\_SettingsPage' : 'seraph_pds\\Plugin::OutputNotAcceptedPageContent' );
 	if( _UserCanUsePlugin() )
-		add_menu_page( Plugin::GetPluginString( 'TitleLong' ), Plugin::GetNavMenuTitle(), 'publish_posts', 'seraph_pds_main', $accepted ? 'seraph_pds\\_UploadPage' : 'seraph_pds\\Plugin::OutputNotAcceptedPageContent', Plugin::FileUri( 'icon.png?v=2.16.13', __FILE__ ) );
+		add_menu_page( Plugin::GetPluginString( 'TitleLong' ), Plugin::GetNavMenuTitle(), 'publish_posts', 'seraph_pds_main', $accepted ? 'seraph_pds\\_UploadPage' : 'seraph_pds\\Plugin::OutputNotAcceptedPageContent', Plugin::FileUri( 'icon.png?v=2.16.14', __FILE__ ) );
 }
 
 function OnInitAdminModeNotAccepted()
@@ -404,7 +404,7 @@ function _LoadScripts( $workScript = true )
 	if( !$workScript )
 		return;
 
-	wp_register_script( Plugin::ScriptId( 'editor' ), add_query_arg( Plugin::GetFileUrlPackageParams(), Plugin::FileUrl( 'editor.js', __FILE__ ) ), array_merge( array( 'jquery' ), Plugin::CmnScriptId( array( 'Cmn', 'Gen', 'Ui', 'Net' ) ) ), '2.16.13' );
+	wp_register_script( Plugin::ScriptId( 'editor' ), add_query_arg( Plugin::GetFileUrlPackageParams(), Plugin::FileUrl( 'editor.js', __FILE__ ) ), array_merge( array( 'jquery' ), Plugin::CmnScriptId( array( 'Cmn', 'Gen', 'Ui', 'Net' ) ) ), '2.16.14' );
 	Plugin::Loc_ScriptLoad( Plugin::ScriptId( 'editor' ) );
 	wp_enqueue_script( Plugin::ScriptId( 'editor' ) );
 

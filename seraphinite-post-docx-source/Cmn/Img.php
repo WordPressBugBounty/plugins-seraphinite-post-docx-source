@@ -32,6 +32,7 @@ class Img
 
 	static function GetInfoFromFile( $file, $ext = false )
 	{
+
 		$data = @file_get_contents( $file );
 		return( $data !== false ? Img::GetInfoFromData( $data, $ext ) : null );
 	}
@@ -76,9 +77,12 @@ class Img
 
 	static function GetInfoFromData( $data, $ext = false )
 	{
+		if( !is_string( $data ) )
+			return( null );
+
 		$infoEx = $ext ? array() : null;
 
-		if( gettype( $data ) == 'string' && @preg_match( '@<svg[>\\s]@i', $data ) && @preg_match( '@</svg>@i', $data ) )
+		if( @preg_match( '@<svg[>\\s]@i', $data ) && @preg_match( '@</svg>@i', $data ) )
 		{
 			$info = array( 'mime' => 'image/svg+xml', 'cx' => null, 'cy' => null );
 
@@ -355,36 +359,39 @@ class Img
 				else if( $speed > 11 )
 					$speed = 11;
 
-				$mdl = ''; call_user_func_array( self::$_toolPaths[ 'pngquant' ], array( &$mdl ) );
-				if( @file_exists( $mdl ) )
+				if( isset( self::$_toolPaths[ 'pngquant' ] ) )
 				{
-					if( !function_exists( 'proc_open' ) || !function_exists( 'proc_close' ) )
-						return( Gen::S_OK );
-
-					$fileNew = Gen::GetFileName( $file, true, true ) . '.O.' . Gen::GetFileExt( $file );
-
-					$cmdline = Gen::ExecEscArg( $mdl ) . ' --quality 0-' . $quality . ' --speed ' . $speed . ' --force --output ' . Gen::ExecEscArg( $fileNew ) . ' ' . Gen::ExecEscArg( $file );
-
-					$hProc = @proc_open( $cmdline, array( 2 => array( 'pipe', 'w' ) ), $pipes, null, null, array( 'bypass_shell' => true ) );
-					if( $hProc )
+					$mdl = ''; call_user_func_array( self::$_toolPaths[ 'pngquant' ], array( &$mdl ) );
+					if( @file_exists( $mdl ) )
 					{
-						$output = @stream_get_contents( (isset($pipes[ 2 ])?$pipes[ 2 ]:null) );
-						@fclose( (isset($pipes[ 2 ])?$pipes[ 2 ]:null) );
-						$rescode = @proc_close( $hProc );
+						if( !function_exists( 'proc_open' ) || !function_exists( 'proc_close' ) )
+							return( Gen::S_OK );
 
-						if( $rescode == 0 )
+						$fileNew = Gen::GetFileName( $file, true, true ) . '.O.' . Gen::GetFileExt( $file );
+
+						$cmdline = Gen::ExecEscArg( $mdl ) . ' --quality 0-' . $quality . ' --speed ' . $speed . ' --force --output ' . Gen::ExecEscArg( $fileNew ) . ' ' . Gen::ExecEscArg( $file );
+
+						$hProc = @proc_open( $cmdline, array( 2 => array( 'pipe', 'w' ) ), $pipes, null, null, array( 'bypass_shell' => true ) );
+						if( $hProc )
 						{
-							$size = @filesize( $fileNew );
-							if( $size !== false && $size < ( int )@filesize( $file ) )
+							$output = @stream_get_contents( (isset($pipes[ 2 ])?$pipes[ 2 ]:null) );
+							@fclose( (isset($pipes[ 2 ])?$pipes[ 2 ]:null) );
+							$rescode = @proc_close( $hProc );
+
+							if( $rescode == 0 )
 							{
-								if( !@rename( $fileNew, $file ) )
+								$size = @filesize( $fileNew );
+								if( $size !== false && $size < ( int )@filesize( $file ) )
+								{
+									if( !@rename( $fileNew, $file ) )
+										@unlink( $fileNew );
+								}
+								else
 									@unlink( $fileNew );
 							}
 							else
 								@unlink( $fileNew );
 						}
-						else
-							@unlink( $fileNew );
 					}
 				}
 			}

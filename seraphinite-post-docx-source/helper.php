@@ -207,7 +207,7 @@ function OnAdminApi_UpdatePostTypeTaxonomies( $args )
 	if( !is_array( $data ) )
 		return( null );
 
-	$lang = @$args[ 'lang' ];
+	$lang = (isset($args[ 'lang' ])?$args[ 'lang' ]:null);
 
 	$res = Wp::UpdatePostTypeTaxonomies( $data, $args[ 'type' ], $args[ 'postType' ], $lang );
 	return( $res );

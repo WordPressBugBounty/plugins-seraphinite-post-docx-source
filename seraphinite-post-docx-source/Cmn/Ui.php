@@ -207,6 +207,46 @@ class Ui
 		return( self::InputBox( 'number', $id, $value, $attrs, $addNames ) );
 	}
 
+	static function NavTabs( $id, $items, $value = null, $addNames = false, $attrs = null )
+	{
+		if( !is_array( $attrs ) )
+			$attrs = array();
+		if( !is_array( $items ) )
+			$items = array();
+
+		self::_AddIdName( $attrs, $id, $addNames );
+		Gen::SetArrField( $attrs, 'class.+', 'nav-tab-wrapper' );
+
+		$res = '';
+
+		foreach( $items as $itemVal => $itemText )
+		{
+			if( $itemText === null )
+				continue;
+
+			$itemAttrs = null;
+			if( is_array( $itemText ) )
+			{
+				$itemAttrs = (isset($itemText[ 1 ])?$itemText[ 1 ]:null);
+				$itemText = (isset($itemText[ 0 ])?$itemText[ 0 ]:null);
+			}
+
+			if( !is_array( $itemAttrs ) )
+				$itemAttrs = array();
+
+			Gen::SetArrField( $itemAttrs, 'class.+', 'nav-tab' );
+			$itemAttrs[ 'onclick' ] = 'seraph_pds.Ui._cb.NavTabs_OnClickItem(this);return false';
+
+			$itemAttrs[ 'value' ] = $itemVal;
+			if( $itemVal == $value )
+				Gen::SetArrField( $itemAttrs, 'class.+', 'nav-tab-active' );
+
+			$res .= self::Tag( 'button', $itemText, $itemAttrs );
+		}
+
+		return( self::Tag( 'nav', $res, $attrs ) );
+	}
+
 	static function LogItem( $severity, $text, $normalizeText = true )
 	{
 		if( gettype( $text ) !== 'string' )
@@ -350,7 +390,7 @@ class Ui
 		$data = trim( substr( $v, $data + 1 ) );
 		$mimeType = (isset($prms[ 0 ])?$prms[ 0 ]:null);
 		$encoding = (isset($prms[ count( $prms ) - 1 ])?$prms[ count( $prms ) - 1 ]:null);
-		return( $encoding == 'base64' ? base64_decode( $data ) : false );
+		return( $encoding == 'base64' ? base64_decode( $data ) : rawurldecode( $data ) );
 	}
 
 	static function SetSrcAttrData( $data, $mimeType )
@@ -575,6 +615,36 @@ class Ui
 		Gen::SetArrField( $attrsBtn, 'onclick', 'seraph_pds.Ui._cb.ToggleButton_OnClick("' . Ui::EscHtml( $cssSelectorItemToToggle ) . '",this);return(false);' );
 
 		return( Ui::Tag( 'div', Ui::Button( Ui::Tag( 'span', null, array( 'class' => 'dashicons dashicons-arrow-down', 'style' => array( 'margin-left' => '-0.1em' ) ) ), false, null, null, 'button', $attrsBtn ) . Ui::Spinner( false, array( 'class' => array( 'ctlSpaceBefore' ), 'style' => array( 'display' => 'none', 'vertical-align' => 'middle' ) ) ), $attrs ) );
+	}
+
+	static function TableCells( array $aCell, $ctx = null, $nCols = 1 )
+	{
+		$o = '';
+
+		$o .= Ui::TagOpen( 'tr' );
+
+		$iCol = 0;
+		foreach( $aCell as $cell )
+		{
+			$cell = call_user_func( $cell, $ctx );
+			if( is_array( $cell ) )
+			{
+				$o .= Ui::Tag( 'th', $cell[ 0 ] );
+				$cell = $cell[ 1 ];
+			}
+
+			$o .= Ui::Tag( 'td', $cell );
+			$iCol++;
+
+			if( $iCol === $nCols )
+			{
+				$iCol = 0;
+				$o .= Ui::TagClose( 'tr' ) . Ui::TagOpen( 'tr' );
+			}
+		}
+
+		$o .= Ui::TagClose( 'tr' );
+		return( $o );
 	}
 
 	static function Tag( $name, $content = null, $attrs = null, $selfClose = false, $prms = null )
@@ -1380,6 +1450,29 @@ class Ui
 		$n = strlen( $tag[ 0 ] );
 		$posEnd = $pos + $n;
 		return( array( $pos, $posEnd, $n ) );
+	}
+
+	static function SettTokensEditor( $fldId, $v, $placeholder, $ns, $sep = "\n", $height = 5, $masked = false )
+	{
+		$o = '';
+
+		$o .= ( Ui::TokensList( $v, $ns . '/' . $fldId, array( 'masked' => $masked, 'class' => 'vals ctlSpaceVAfter', 'style' => array( 'min-height' => '3em', 'height' => '' . $height . 'em', 'max-height' => '20em' ), 'data-oninit' => 'seraph_pds.Ui.TokensList.InitItems( this, true )' ), true ) );
+
+		$o .= ( Ui::SettBlock_ItemSubTbl_Begin( array( 'class' => 'std', 'style' => array( 'width' => '100%' ) ) ) . Ui::TagOpen( 'tr' ) );
+		{
+			if( $sep === "\n" )
+				$o .= ( Ui::Tag( 'td', Ui::TextArea( null, null, array( 'class' => 'val', 'wrap' => 'off', 'placeholder' => $placeholder, 'style' => array( 'width' => '100%', 'height' => '1em', 'max-height' => '15em', 'line-height' => '1.5' ) ) ), array( 'class' => 'wp-pwd'  ) ) );
+			else
+				$o .= ( Ui::Tag( 'td', Ui::TextBox( null, '', array( 'class' => 'val', 'placeholder' => $placeholder, 'style' => array( 'width' => '100%' ) ) ) ) );
+			$o .= ( Ui::Tag( 'td',
+				Ui::Button( esc_html( Wp::GetLocString( array( 'AddItemBtn', 'admin.Common_ItemsList' ), null, 'seraphinite-post-docx-source' ) ), false, null, array( 'ctlSpaceAfterSm' ), 'button', array( 'onclick' => 'seraph_pds.PluginAdmin._int.StrItem_OnAdd( this, ' . @json_encode( $sep ) . ' ); return false;' ) ) .
+				Ui::Button( Ui::Tag( 'span', null, array( 'class' => 'dashicons dashicons-admin-page', 'style' => array( 'display' => 'table-cell' ) ) ), false, null, array( 'ctlSpaceAfterSm' ), 'button', array( 'onclick' => 'seraph_pds.PluginAdmin._int.StrItem_OnCopyAll( this ); return false;' ) ) .
+				Ui::Button( Ui::Tag( 'span', null, array( 'class' => 'dashicons dashicons-trash', 'style' => array( 'display' => 'table-cell' ) ) ), false, null, null, 'button', array( 'onclick' => 'seraph_pds.PluginAdmin._int.StrItem_OnDelAll( this ); return false;' ) )
+			, array( 'style' => array( 'width' => '1px', 'text-wrap' => 'nowrap' ) ) ) );
+		}
+		$o .= ( Ui::TagClose( 'tr' ) . Ui::SettBlock_ItemSubTbl_End() );
+
+		return( $o );
 	}
 }
 
